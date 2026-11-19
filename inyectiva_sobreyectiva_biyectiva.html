@@ -12,8 +12,8 @@
 <article class="concept"><h3>3. Biyectiva</h3><p>Es simultáneamente inyectiva y sobreyectiva. Cada elemento de B recibe exactamente una flecha.</p><div class="formula">Inyectiva + Sobreyectiva.</div><p class="small muted">Hay correspondencia uno a uno y todos los elementos de B se alcanzan.</p></article>
 </div>
 <h3>Diagramas de ejemplo con valores reales</h3><div class="grid">
-<div class="concept"><b>Inyectiva, no sobreyectiva</b><div class="diagram" id="exInj"></div><p class="small muted">A = {−2, 0, 3}, B = {1, 4, 7, 10}. No se repiten imágenes, pero 10 queda libre.</p></div>
-<div class="concept"><b>Sobreyectiva, no inyectiva</b><div class="diagram" id="exSur"></div><p class="small muted">A = {2, 4, 6, 8}, B = {1, 5}. Todos en B se alcanzan, pero 2 y 4 van a 1.</p></div>
+<div class="concept"><b>Inyectiva, no sobreyectiva</b><div class="diagram" id="exInj"></div><p class="small muted">A = {−2, 0, 3}, B = {1, 3, 6, 9}. No se repiten imágenes, pero 1 queda libre.</p></div>
+<div class="concept"><b>Sobreyectiva, no inyectiva</b><div class="diagram" id="exSur"></div><p class="small muted">A = {−2, 2, −4, 4}, B = {4, 16}. Todos en B se alcanzan, pero valores opuestos comparten imagen.</p></div>
 <div class="concept"><b>Biyectiva</b><div class="diagram" id="exBij"></div><p class="small muted">A = {1, 2, 3}, B = {5, 10, 15}. Correspondencia uno a uno exacta.</p></div>
 </div>
 <div class="concept"><h3>¡Cuidado con esta confusión!</h3><p>Una función siempre debe asignar a <b>cada elemento de A exactamente una imagen en B</b>. La inyectividad y la sobreyectividad son propiedades adicionales: una función puede no tener ninguna de las dos, tener solo una o tener ambas.</p></div>
@@ -26,36 +26,44 @@ const $=id=>document.getElementById(id);
 let questions=[],idx=0,score=0,selected=null,answered=false;
 const TOTAL=12;
 
+function getOvalBounds(ys){
+  const padY=30;
+  const top=Math.min(...ys)-padY;
+  const bottom=Math.max(...ys)+padY;
+  const cy=(top+bottom)/2;
+  const ry=Math.max(28,(bottom-top)/2);
+  return {cy,ry,top,bottom};
+}
+
 function svgMap(valsA,valsB,edges){
   const nA=valsA.length,nB=valsB.length;
-  const ysA=Array.from({length:nA},(_,i)=>46+i*50);
-  const ysB=Array.from({length:nB},(_,i)=>46+i*50);
-  const h=Math.max(nA,nB)*50+34;
-  const lines=edges.map(([a,b])=>`<path d="M108 ${ysA[a]} C160 ${ysA[a]},190 ${ysB[b]},242 ${ysB[b]}" fill="none" stroke="#64748b" stroke-width="2.4" marker-end="url(#arr)"/>`).join('');
-  const left=ysA.map((y,i)=>`<circle cx="84" cy="${y}" r="18" fill="#2369aa"/><text x="84" y="${y+5}" text-anchor="middle" fill="white" font-size="13" font-weight="700">${valsA[i]}</text>`).join('');
-  const right=ysB.map((y,i)=>`<circle cx="266" cy="${y}" r="18" fill="#13836f"/><text x="266" y="${y+5}" text-anchor="middle" fill="white" font-size="13" font-weight="700">${valsB[i]}</text>`).join('');
+  const startY=58,stepY=54;
+  const ysA=Array.from({length:nA},(_,i)=>startY+i*stepY);
+  const ysB=Array.from({length:nB},(_,i)=>startY+i*stepY);
+  const boxA=getOvalBounds(ysA);
+  const boxB=getOvalBounds(ysB);
+  const h=Math.max(boxA.bottom,boxB.bottom)+16;
+  const cxA=84,cxB=266,r=19;
+
+  const lines=edges.map(([a,b])=>`<path d="M${cxA+r+4} ${ysA[a]} C155 ${ysA[a]},195 ${ysB[b]},${cxB-r-8} ${ysB[b]}" fill="none" stroke="#64748b" stroke-width="2.4" marker-end="url(#arr)"/>`).join('');
+
+  const left=ysA.map((y,i)=>`<g><circle cx="${cxA}" cy="${y}" r="${r}" fill="#2369aa"/><text x="${cxA}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="white" font-size="13" font-weight="700">${valsA[i]}</text></g>`).join('');
+
+  const right=ysB.map((y,i)=>`<g><circle cx="${cxB}" cy="${y}" r="${r}" fill="#13836f"/><text x="${cxB}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="white" font-size="13" font-weight="700">${valsB[i]}</text></g>`).join('');
+
   return `<svg viewBox="0 0 350 ${h}" role="img" aria-label="Diagrama sagital con valores reales">
     <defs><marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6" fill="none" stroke="#64748b" stroke-width="1.2"/></marker></defs>
-    <text x="84" y="18" text-anchor="middle" font-weight="700" fill="currentColor">A</text>
-    <text x="266" y="18" text-anchor="middle" font-weight="700" fill="currentColor">B</text>
-    <ellipse cx="84" cy="${h/2+8}" rx="50" ry="${Math.max(32,nA*25+10)}" fill="#2369aa" fill-opacity=".06" stroke="#2369aa" stroke-width="1.8"/>
-    <ellipse cx="266" cy="${h/2+8}" rx="50" ry="${Math.max(32,nB*25+10)}" fill="#13836f" fill-opacity=".06" stroke="#13836f" stroke-width="1.8"/>
+    <text x="${cxA}" y="18" text-anchor="middle" dominant-baseline="central" font-weight="700" fill="currentColor">A</text>
+    <text x="${cxB}" y="18" text-anchor="middle" dominant-baseline="central" font-weight="700" fill="currentColor">B</text>
+    <ellipse cx="${cxA}" cy="${boxA.cy}" rx="46" ry="${boxA.ry}" fill="#2369aa" fill-opacity=".06" stroke="#2369aa" stroke-width="1.8"/>
+    <ellipse cx="${cxB}" cy="${boxB.cy}" rx="46" ry="${boxB.ry}" fill="#13836f" fill-opacity=".06" stroke="#13836f" stroke-width="1.8"/>
     ${lines}${left}${right}
   </svg>`;
 }
 
-function analyze(valsB,edges){
-  const targets=edges.map(e=>e[1]);
-  const inj=new Set(targets).size===targets.length;
-  const sur=new Set(targets).size===valsB.length;
-  const unreached=valsB.filter((_,i)=>!targets.includes(i));
-  const label=inj&&sur?'Biyectiva':inj?'Solo inyectiva':sur?'Solo sobreyectiva':'Ni inyectiva ni sobreyectiva';
-  return {inj,sur,label,unreached};
-}
-
 const examples=[
-  {a:['-2','0','3'],b:['1','4','7','10'],e:[[0,0],[1,1],[2,2]]},
-  {a:['2','4','6','8'],b:['1','5'],e:[[0,0],[1,0],[2,1],[3,1]]},
+  {a:['−2','0','3'],b:['1','3','6','9'],e:[[0,1],[1,2],[2,3]]},
+  {a:['−2','2','−4','4'],b:['4','16'],e:[[0,0],[1,0],[2,1],[3,1]]},
   {a:['1','2','3'],b:['5','10','15'],e:[[0,0],[1,1],[2,2]]}
 ];
 ['exInj','exSur','exBij'].forEach((id,i)=>$(id).innerHTML=svgMap(examples[i].a,examples[i].b,examples[i].e));
@@ -63,138 +71,138 @@ const examples=[
 const bank=[
   {
     tag:'CLASIFICACIÓN',
-    a:['-3','-1','2','4'],
-    b:['0','3','6','9','12'],
-    edges:[[0,1],[1,2],[2,3],[3,4]],
-    question:'¿Cómo se clasifica esta función de A en B?',
+    a:['1','2','3'],
+    b:['2','4','6','8'],
+    edges:[[0,0],[1,1],[2,2]],
+    question:'Con la regla f(x) = 2x, ¿cómo se clasifica esta función de A en B?',
     options:['Solo inyectiva','Solo sobreyectiva','Biyectiva','Ni inyectiva ni sobreyectiva'],
     answer:'Solo inyectiva',
-    why:'Cada valor de A llega a un número distinto de B (es inyectiva), pero 0 no recibe ninguna flecha (no es sobreyectiva).'
+    why:'Cada entrada de A produce un doble distinto (2, 4 y 6), por lo que es inyectiva, pero el 8 de B no recibe ninguna flecha.'
   },
   {
     tag:'CLASIFICACIÓN',
-    a:['5','10','15','20'],
-    b:['1','2'],
+    a:['−2','2','−3','3'],
+    b:['4','9'],
     edges:[[0,0],[1,0],[2,1],[3,1]],
-    question:'¿Cómo se clasifica esta función de A en B?',
+    question:'Con la regla f(x) = x², ¿cómo se clasifica esta función de A en B?',
     options:['Solo inyectiva','Solo sobreyectiva','Biyectiva','Ni inyectiva ni sobreyectiva'],
     answer:'Solo sobreyectiva',
-    why:'Tanto 1 como 2 reciben flechas (es sobreyectiva), pero 5 y 10 comparten el 1, y 15 y 20 comparten el 2 (no es inyectiva).'
+    why:'Tanto 4 como 9 son alcanzados (sobreyectiva), pero −2 y 2 dan 4, y −3 y 3 dan 9 (no es inyectiva).'
   },
   {
     tag:'CLASIFICACIÓN',
-    a:['-4','0','4'],
-    b:['-8','0','8'],
-    edges:[[0,0],[1,1],[2,2]],
-    question:'¿Cómo se clasifica esta función de A en B?',
+    a:['−1','0','1','2'],
+    b:['2','3','4','5'],
+    edges:[[0,0],[1,1],[2,2],[3,3]],
+    question:'Con la regla f(x) = x + 3, ¿cómo se clasifica esta función de A en B?',
     options:['Solo inyectiva','Solo sobreyectiva','Biyectiva','Ni inyectiva ni sobreyectiva'],
     answer:'Biyectiva',
-    why:'Cada elemento de A tiene una imagen distinta y todos los elementos de B (−8, 0 y 8) son alcanzados.'
+    why:'Cada valor de A tiene una imagen única y todos los elementos de B (2, 3, 4 y 5) son alcanzados.'
   },
   {
     tag:'CLASIFICACIÓN',
-    a:['1','3','5','7'],
-    b:['2','4','6','8'],
-    edges:[[0,0],[1,0],[2,2],[3,2]],
-    question:'¿Cómo se clasifica esta función de A en B?',
+    a:['−2','2','−1','1'],
+    b:['4','1','9'],
+    edges:[[0,0],[1,0],[2,1],[3,1]],
+    question:'Con la regla f(x) = x², ¿cómo se clasifica esta función de A en B?',
     options:['Solo inyectiva','Solo sobreyectiva','Biyectiva','Ni inyectiva ni sobreyectiva'],
     answer:'Ni inyectiva ni sobreyectiva',
-    why:'Se repiten imágenes (1 y 3 van a 2; 5 y 7 van a 6) y además 4 y 8 no reciben ninguna flecha.'
-  },
-  {
-    tag:'CODOMINIO',
-    a:['-2','1','4'],
-    b:['3','6','9','12'],
-    edges:[[0,0],[1,2],[2,3]],
-    question:'¿Qué elemento de B queda sin imagen (impide que sea sobreyectiva)?',
-    options:['3','6','9','12'],
-    answer:'6',
-    why:'El número 6 de B no recibe ninguna flecha desde A, por lo que Imagen(f) ≠ B.'
-  },
-  {
-    tag:'INYECTIVIDAD',
-    a:['-5','2','5','8'],
-    b:['4','10','25','64'],
-    edges:[[0,2],[1,1],[2,2],[3,3]],
-    question:'¿Por qué esta función NO es inyectiva?',
-    options:[
-      'Porque −5 y 5 tienen la misma imagen (25)',
-      'Porque el 4 no tiene ninguna flecha',
-      'Porque el 8 llega al 64',
-      'Porque hay más elementos en A que en B'
-    ],
-    answer:'Porque −5 y 5 tienen la misma imagen (25)',
-    why:'Dos entradas diferentes (−5 y 5) apuntan al mismo valor 25 en B, lo que rompe la inyectividad.'
-  },
-  {
-    tag:'SOBREYECTIVIDAD',
-    a:['2','4','6'],
-    b:['1','3','5'],
-    edges:[[0,0],[1,1],[2,2]],
-    question:'¿Por qué esta función SÍ es sobreyectiva?',
-    options:[
-      'Porque todos los valores de B (1, 3 y 5) reciben al menos una flecha',
-      'Porque A y B tienen la misma cantidad de números',
-      'Porque ningún número de B se repite',
-      'Porque el 2 va al 1'
-    ],
-    answer:'Porque todos los valores de B (1, 3 y 5) reciben al menos una flecha',
-    why:'Cada elemento del codominio B es alcanzado por al menos un elemento de A.'
-  },
-  {
-    tag:'BIYECTIVIDAD',
-    a:['10','20','30','40'],
-    b:['1','2','3','4'],
-    edges:[[0,0],[1,1],[2,2],[3,3]],
-    question:'Si se cambia la flecha de 40 para que también apunte a 3, ¿qué ocurre?',
-    options:[
-      'Deja de ser biyectiva (pasa a ser solo sobreyectiva)',
-      'Pasa a ser solo inyectiva',
-      'Sigue siendo biyectiva',
-      'Deja de ser función'
-    ],
-    answer:'Deja de ser biyectiva (pasa a ser solo sobreyectiva)',
-    why:'Todos los valores de B seguirían cubiertos (sobreyectiva), pero 30 y 40 tendrían la misma imagen 3 (deja de ser inyectiva).'
-  },
-  {
-    tag:'CLASIFICACIÓN',
-    a:['-1','0','1','2'],
-    b:['-2','0','2'],
-    edges:[[0,0],[1,1],[2,2],[3,2]],
-    question:'¿Cómo se clasifica esta función de A en B?',
-    options:['Solo inyectiva','Solo sobreyectiva','Biyectiva','Ni inyectiva ni sobreyectiva'],
-    answer:'Solo sobreyectiva',
-    why:'Los tres elementos de B (−2, 0 y 2) reciben flechas, pero 1 y 2 comparten la imagen 2.'
+    why:'Hay valores repetidos (por ejemplo −2 y 2 llegan a 4) y el 9 de B queda sin ninguna flecha.'
   },
   {
     tag:'CODOMINIO',
     a:['0','1','2'],
     b:['0','1','4','9'],
     edges:[[0,0],[1,1],[2,2]],
-    question:'¿Qué valores de B habría que quitar para que la función sea biyectiva?',
-    options:['4 y 9','0 y 1','Solo 9','Ninguno'],
-    answer:'4 y 9',
-    why:'Al quitar 4 y 9, B queda con {0, 1, 2} (o en correspondencia 1 a 1 con las imágenes alcanzadas), logrando inyectividad y sobreyectividad.'
+    question:'En el diagrama con f(x) = x², ¿qué valor de B queda sin flecha entrante?',
+    options:['0','1','4','9'],
+    answer:'9',
+    why:'El 0 recibe flecha desde 0, el 1 desde 1 y el 4 desde 2; el único valor de B sin flecha es 9.'
+  },
+  {
+    tag:'INYECTIVIDAD',
+    a:['−5','5','2','4'],
+    b:['25','4','16'],
+    edges:[[0,0],[1,0],[2,1],[3,2]],
+    question:'Con f(x) = x², ¿por qué esta función NO es inyectiva?',
+    options:[
+      'Porque −5 y 5 tienen la misma imagen (25)',
+      'Porque el 16 no recibe flechas',
+      'Porque 2 y 4 van a números distintos',
+      'Porque B tiene menos elementos que A'
+    ],
+    answer:'Porque −5 y 5 tienen la misma imagen (25)',
+    why:'Dos elementos distintos de A (−5 y 5) llegan al mismo elemento 25 de B.'
+  },
+  {
+    tag:'SOBREYECTIVIDAD',
+    a:['3','6','9'],
+    b:['1','2','3'],
+    edges:[[0,0],[1,1],[2,2]],
+    question:'Con f(x) = x ÷ 3, ¿por qué esta función SÍ es sobreyectiva?',
+    options:[
+      'Porque todos los elementos de B (1, 2 y 3) reciben al menos una flecha',
+      'Porque 3 ÷ 3 es igual a 1',
+      'Porque no se repiten imágenes',
+      'Porque A y B tienen 3 elementos'
+    ],
+    answer:'Porque todos los elementos de B (1, 2 y 3) reciben al menos una flecha',
+    why:'Cada número del codominio B es resultado de dividir un elemento de A entre 3.'
+  },
+  {
+    tag:'BIYECTIVIDAD',
+    a:['10','20','30','40'],
+    b:['1','2','3','4'],
+    edges:[[0,0],[1,1],[2,2],[3,3]],
+    question:'Con f(x) = x ÷ 10, si se redefiniera B como {1, 2, 3, 4, 5}, ¿qué pasaría?',
+    options:[
+      'Dejaría de ser sobreyectiva (y por tanto no sería biyectiva)',
+      'Seguiría siendo biyectiva',
+      'Dejaría de ser inyectiva',
+      'Dejaría de ser función'
+    ],
+    answer:'Dejaría de ser sobreyectiva (y por tanto no sería biyectiva)',
+    why:'El nuevo elemento 5 de B no tendría ningún valor en A que diera 5 al dividir entre 10.'
   },
   {
     tag:'CLASIFICACIÓN',
-    a:['7','14','21'],
-    b:['1','2','3','4','5'],
+    a:['−4','−2','2','4'],
+    b:['4','16'],
+    edges:[[0,1],[1,0],[2,0],[3,1]],
+    question:'Con f(x) = x², ¿cómo se clasifica esta función de A en B?',
+    options:['Solo inyectiva','Solo sobreyectiva','Biyectiva','Ni inyectiva ni sobreyectiva'],
+    answer:'Solo sobreyectiva',
+    why:'Tanto 4 como 16 reciben flechas (sobreyectiva), pero −2 y 2 van a 4, y −4 y 4 van a 16 (no es inyectiva).'
+  },
+  {
+    tag:'CODOMINIO',
+    a:['1','2','3'],
+    b:['3','6','9','12'],
     edges:[[0,0],[1,1],[2,2]],
-    question:'¿Cómo se clasifica esta función de A en B?',
+    question:'Con f(x) = 3x, ¿qué elemento de B no pertenece a la imagen de f?',
+    options:['3','6','9','12'],
+    answer:'12',
+    why:'Los resultados de 3x para A = {1, 2, 3} son 3, 6 y 9; el 12 queda sin imagen en A.'
+  },
+  {
+    tag:'CLASIFICACIÓN',
+    a:['0','2','4'],
+    b:['1','3','5','7','9'],
+    edges:[[0,0],[1,1],[2,2]],
+    question:'Con f(x) = x + 1, ¿cómo se clasifica esta función de A en B?',
     options:['Solo inyectiva','Solo sobreyectiva','Biyectiva','Ni inyectiva ni sobreyectiva'],
     answer:'Solo inyectiva',
-    why:'Cada valor de A va a un elemento distinto de B, pero 4 y 5 quedan sin flecha entrante.'
+    why:'0 va a 1, 2 va a 3 y 4 va a 5 (es inyectiva), pero 7 y 9 no reciben ninguna flecha.'
   },
   {
     tag:'CLASIFICACIÓN',
-    a:['-6','-3','0','3'],
-    b:['-2','-1','0','1'],
-    edges:[[0,0],[1,1],[2,2],[3,2]],
-    question:'¿Cómo se clasifica esta función de A en B?',
+    a:['−3','3','1','2'],
+    b:['9','1','4','16'],
+    edges:[[0,0],[1,0],[2,1],[3,2]],
+    question:'Con f(x) = x², ¿cómo se clasifica esta función de A en B?',
     options:['Solo inyectiva','Solo sobreyectiva','Biyectiva','Ni inyectiva ni sobreyectiva'],
     answer:'Ni inyectiva ni sobreyectiva',
-    why:'0 y 3 en A llegan ambos a 0 en B (no es inyectiva), y el 1 en B no recibe flechas (no es sobreyectiva).'
+    why:'−3 y 3 llegan a 9 (no es inyectiva) y el 16 de B queda sin flecha entrante (no es sobreyectiva).'
   }
 ];
 
@@ -230,7 +238,7 @@ function render(){
   $('setsInfo').innerHTML=`<b>Conjunto A:</b> { ${q.a.join(', ')} } &nbsp;·&nbsp; <b>Conjunto B:</b> { ${q.b.join(', ')} }`;
   $('qdiagram').innerHTML=svgMap(q.a,q.b,q.edges);
   $('question').textContent=q.question;
-  $('answers').innerHTML=q.options.map((v,i)=>`<label class="choice"><input type="radio" name="ans" value="${v.replace(/"/g,'&quot;')}"> ${v}</label>`).join('');
+  $('answers').innerHTML=q.options.map(v=>`<label class="choice"><input type="radio" name="ans" value="${v.replace(/"/g,'&quot;')}"> ${v}</label>`).join('');
   document.querySelectorAll('input[name=ans]').forEach(el=>el.addEventListener('change',()=>{selected=el.value;$('check').disabled=false}));
   $('feedback').classList.add('hidden');
   $('check').classList.remove('hidden');
